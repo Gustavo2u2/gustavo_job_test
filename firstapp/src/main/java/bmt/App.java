@@ -9,7 +9,12 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
 import bmt.Models.UsersModel;
-
+import org.mindrot.jbcrypt.BCrypt;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -65,11 +70,11 @@ public class App {
                 insertCSVToDB(summ, "jdbc:sqlite:dbuser.db");
 
                 // subir archivos al servidor sftp
-                uploadFileToSFTP(sftpHost, sftpPort, sftpUser, sftpPassword, sftpDir, json);
+                // uploadFileToSFTP(sftpHost, sftpPort, sftpUser, sftpPassword, sftpDir, json);
 
-                uploadFileToSFTP(sftpHost, sftpPort, sftpUser, sftpPassword, sftpDir, summ);
+                // uploadFileToSFTP(sftpHost, sftpPort, sftpUser, sftpPassword, sftpDir, summ);
 
-                uploadFileToSFTP(sftpHost, sftpPort, sftpUser, sftpPassword, sftpDir, etl);
+                // uploadFileToSFTP(sftpHost, sftpPort, sftpUser, sftpPassword, sftpDir, etl);
 
         }
 
@@ -412,6 +417,10 @@ public class App {
                 try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + "dbuser.db");
                                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
                         for (UsersModel user : users) {
+
+                                // Encriptar la contraseña utilizando BCrypt
+                                String hashedPassword = BCrypt.hashpw(user.getUsers_password(), BCrypt.gensalt());
+
                                 pstmt.setInt(1, user.getUsers_id());
                                 pstmt.setString(2, user.getUsers_firstName());
                                 pstmt.setString(3, user.getUsers_lastName());
@@ -421,7 +430,10 @@ public class App {
                                 pstmt.setString(7, user.getUsers_email());
                                 pstmt.setString(8, user.getUsers_phone());
                                 pstmt.setString(9, user.getUsers_username());
-                                pstmt.setString(10, user.getUsers_password());
+
+                                // Insertar la contraseña encriptada
+                                pstmt.setString(10, hashedPassword);
+
                                 pstmt.setString(11, user.getUsers_birthDate());
                                 pstmt.setString(12, user.getUsers_image());
                                 pstmt.setString(13, user.getUsers_bloodGroup());
