@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: java-cronjob
+spec:
+  schedule: "0 8 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: java-job
+              image: openjdk:17-jdk-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Clonar el repositorio
+                  git clone https://github.com/Gustavo2u2/gustavo_job_test /app
+                  cd /app
+
+                  # Compilar el proyecto (ajusta según el tipo de proyecto)
+                  javac -d out $(find . -name "*.java")
+
+                  # Ejecutar el compilado
+                  java -cp out MainClassName
+              volumeMounts:
+                - name: maven-cache
+                  mountPath: /root/.m2
+          restartPolicy: OnFailure
+          volumes:
+            - name: maven-cache
+              emptyDir: {}
